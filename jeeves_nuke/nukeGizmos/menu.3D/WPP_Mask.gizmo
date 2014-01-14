@@ -1,0 +1,99 @@
+#! C:/Program Files/Nuke7.0v2/Nuke7.0.exe -nx
+version 7.0 v2
+Gizmo {
+ help "Version of Depth Bubble with an inner radius setting.  Leaving this at 0 will give the same result as before.  Values up to the radius value will allow an inner radius to be set.\n\nThere's also a dropdown list for fallof method - linear, smoothstep or cubic.\n\nv3 update - You can now scale the bubble in x, y and z world space.\n\n - Steve Newbold 2011"
+ note_font "Bitstream Vera Sans"
+ mapsize {0.15 0.15}
+ addUserKnob {20 User l N_Depth_Bubble}
+ addUserKnob {41 in l "input channel" T Shuffle_Input_Channels.in}
+ addUserKnob {26 ""}
+ addUserKnob {41 pos_center T Depth_Bubble.pos_center}
+ addUserKnob {41 radius T Depth_Bubble.radius}
+ addUserKnob {7 inner_radius l "inner radius" R 0 100}
+ inner_radius 10
+ addUserKnob {4 falloff M {linear smoothstep cubic}}
+ addUserKnob {26 ""}
+ addUserKnob {41 xscale T Depth_Bubble.xscale}
+ addUserKnob {41 yscale T Depth_Bubble.yscale}
+ addUserKnob {41 zscale T Depth_Bubble.zscale}
+ addUserKnob {26 ""}
+ addUserKnob {41 offset T Depth_Bubble.offset}
+ addUserKnob {41 round T Depth_Bubble.round}
+ addUserKnob {41 about T Depth_Bubble.about}
+}
+ Input {
+  inputs 0
+  name position_img
+  xpos -469
+  ypos -345
+ }
+ Shuffle {
+  in rgba
+  name Shuffle_Input_Channels
+  xpos -469
+  ypos -285
+ }
+ Expression {
+  temp_name0 x
+  temp_expr0 (pos_center.r-r)+((offset*cos(radians(about)))*cos(radians(round)))
+  temp_name1 y
+  temp_expr1 (pos_center.g-g)+(offset*sin(radians(about)))
+  temp_name2 z
+  temp_expr2 (pos_center.b-b)+((offset*cos(radians(about)))*sin(radians(round)))
+  expr3 "r == 0 && g == 0 && b == 0?0:(xscale != 1 || yscale != 1 || zscale != 1?1-(sqrt(pow2(x)/pow2(xscale)+pow2(y)/pow2(yscale)+pow2(z)/pow2(zscale))/radius):1-(sqrt(pow2(x)+pow2(y)+pow2(z))/radius))"
+  name Depth_Bubble
+  xpos -469
+  ypos -236
+  addUserKnob {20 User}
+  addUserKnob {7 xscale}
+  xscale 0.5
+  addUserKnob {7 yscale}
+  yscale 1
+  addUserKnob {7 zscale}
+  zscale 1
+  addUserKnob {18 pos_center}
+  pos_center {1 -1 17}
+  addUserKnob {7 radius R 0 100}
+  radius 61
+  addUserKnob {7 offset R -100 100}
+  offset -1
+  addUserKnob {7 round R -180 180}
+  round -1
+  addUserKnob {7 about R -180 180}
+ }
+ Grade {
+  channels alpha
+  whitepoint {{"1-(min(parent.inner_radius, parent.radius)*(1/parent.radius))"}}
+  white_clamp true
+  name Inner_Radius
+  xpos -469
+  ypos -177
+ }
+set N29c670a0 [stack 0]
+ Expression {
+  expr3 "pow(a, 2)"
+  name Cubic
+  xpos -352
+  ypos -109
+ }
+push $N29c670a0
+ Expression {
+  expr3 "smoothstep(0, 1, a)"
+  name Smoothstep
+  xpos -579
+  ypos -109
+ }
+push $N29c670a0
+ Switch {
+  inputs 3
+  which {{parent.falloff}}
+  name Switch1
+  xpos -469
+  ypos -49
+ }
+ Output {
+  name Output1
+  xpos -469
+  ypos 9
+ }
+end_group
