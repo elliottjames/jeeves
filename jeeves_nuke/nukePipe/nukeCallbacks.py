@@ -118,15 +118,16 @@ def getAutoSaveFiles(filename):
   return [ filename for _, filename in date_file_list ]
 
 def createWriteDir():
-  file = nuke.filename(nuke.thisNode())
-  dir = os.path.dirname( file )
-  osdir = nuke.callbacks.filenameFilter( dir )
-  # cope with the directory existing already by ignoring that exception
-  try:
-    os.makedirs( osdir )
-  except OSError, e:
-    if e.errno != errno.EEXIST:
-      raise
+    print 'WRITE CALLBACK FUNCTION'
+    file = nuke.filename(nuke.thisNode())
+    dir = os.path.dirname( file )
+    osdir = nuke.callbacks.filenameFilter( dir )
+    # cope with the directory existing already by ignoring that exception
+    try:
+        os.makedirs( osdir )
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
 
 #currently not being used
 def checkScriptName():

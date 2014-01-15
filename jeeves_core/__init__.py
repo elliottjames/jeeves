@@ -13,6 +13,8 @@ if sys.platform == 'darwin':
     
 elif sys.platform == 'win32':
     jobsRoot = r'\\bertie\bertie\Jobs'
+    resourcesRoot = r'\\resources\resources'
+    user = os.getenv('USERNAME')
     
 elif sys.platform == 'linux2':
     jobsRoot = '/mnt/bertie/Jobs'

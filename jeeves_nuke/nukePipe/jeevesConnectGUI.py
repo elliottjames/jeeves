@@ -20,7 +20,6 @@ class NukeConnectGui(QWidget):
 
         spacerItemLeft = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         spacerItemRight = QSpacerItem(5, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.default_pix = '/Users/elliott/Downloads/tmp.jpg'
         self.default_pix = os.path.join(jeeves_core.resourcesRoot, 'vfx', 'jeeves', 'icons', 'tmp.jpg')
 
 
@@ -85,7 +84,7 @@ class NukeConnectGui(QWidget):
         self.snap = QPushButton('&Snap')
         self.snap.setMinimumSize(QSize(75, 0))
         self.snap.setMaximumSize(QSize(75, 45))
-        self.snap.clicked.connect(self.snappy)
+        self.snap.clicked.connect(self.thumb_snap)
         
         
         self.hbox3_thumb.addItem(spacer1)
@@ -100,14 +99,14 @@ class NukeConnectGui(QWidget):
         text = ''
         #self.notes = QPlainTextEdit(text)
         self.notes = QTextEdit(text)
-        self.notes.setMinimumSize(QSize(245, 135))
-        self.notes.setMaximumSize(QSize(245, 135))
+        self.notes.setMinimumSize(QSize(240, 135))
+        self.notes.setMaximumSize(QSize(240, 135))
         
         
         self.notesnap = QPushButton('&Save')
         self.notesnap.setMinimumSize(QSize(75, 0))
         self.notesnap.setMaximumSize(QSize(75, 45))
-        self.notesnap.clicked.connect(self.notesnappy)
+        self.notesnap.clicked.connect(self.note_snap)
         
         self.hbox6_notes.addItem(spacer1)
         self.hbox6_notes.addWidget(self.notes)
@@ -177,49 +176,85 @@ class NukeConnectGui(QWidget):
     #################################################################################
     # GUI FUNCTIONS
 
-    def notesnappy(self):
-        print self.notes.toPlainText()
+    #################################################################################
+    # upadte thumbnail and notes
+    
+    def check_for_tmp(self):
+        tmpdir = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp')
+        if not os.path.isdir(tmpdir):
+            os.mkdir(tmpdir)
+    
+    def update_thumb(self):
+        self.check_for_tmp()
+        self.shot_thumb = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.jpg' % self.shot)
+        
+        if os.path.isfile(self.shot_thumb):
+            self.lbl.setPixmap(QPixmap(self.shot_thumb).scaled(self.lbl.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+        else:
+            self.lbl.setPixmap(QPixmap(self.default_pix).scaled(self.lbl.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
+
+    def update_note(self):
+        self.check_for_tmp()
+        self.shot_note = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.txt' % self.shot)
+        
+        if os.path.isfile(self.shot_note):
+            f = open(self.shot_note, 'r')
+            file_content = f.readlines()
+            f.close()
+            text = ''.join(file_content)
+            self.notes.clear()
+            self.notes.setText(text)
+            
+        else:
+            self.notes.clear()
+
+    def note_snap(self):
+        self.check_for_tmp()
+        self.shot_note = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.txt' % self.shot)
+        
+        if not os.path.isfile(self.shot_note):
+            open(self.shot_note, 'w')
+
+        f = open(self.shot_note, 'w')
+        f.write(self.notes.toPlainText())
+        f.close()
+        
+        self.update_note()
 
 
-    def snappy(self):
+    def thumb_snap(self):
+        self.check_for_tmp()
+
         #lets make sure were snapping for the current shot
         shot = self.shotcombo.currentText()
         if os.getenv('SHOT') == shot:
-
-            print 'SNAPPY'
             viewer = nuke.activeViewer()
             actInput = nuke.ViewerWindow.activeInput(viewer)
             viewNode = nuke.activeViewer().node()
             selInput = nuke.Node.input(viewNode, actInput)
             
+            reformatNode = nuke.nodes.Reformat( type = "to format", format = "240 135 eight_scaled", resize = 'fill') 
+            reformatNode.setInput(0, selInput) 
             
-            reformatPAL = nuke.nodes.Reformat( type = "to format", format = "240 135 eight_scaled", resize = 'fill') 
-            reformatPAL.setInput(0, selInput) 
-            
-            shot_pix = '/tmp/tmp/jpg'
-            shot_pix = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', 'tmp', '%s.jpg' % self.shot)
-        
-            
-            write2 = nuke.nodes.Write( file = shot_pix, name = 'tmpWrite2' , file_type = 'jpg')
-            
-        
-            write2.setInput(0,reformatPAL)
-        
+            self.shot_thumb = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.jpg' % self.shot).replace('\\', '/')
+
+            writeNode = nuke.nodes.Write( file = self.shot_thumb, name = 'tmpWrite2' , file_type = 'jpg')
+            writeNode.setInput(0,reformatNode)
             curFrame = int(nuke.knob("frame"))
         
-            nuke.execute(write2.name(), curFrame, curFrame)
-        
-            nuke.delete(write2)
-            nuke.delete(reformatPAL)
-            print 'SNAPPED'
-            self.update_pix()
+            nuke.execute(writeNode.name(), curFrame, curFrame)
+            nuke.delete(writeNode)
+            nuke.delete(reformatNode)
+            
+            self.update_thumb()
         else:
-            print 'not snapping for current shot'
-
+            #print 'not snapping for current shot'
+            nuke.message('not snapping for current shot')
+    
+    #################################################################################
+    
     def addshot(self):
         print 'add shot'
-        #shot = nuke dialogue box - gui only, shot formatting / detection to happen in utils
-        #nukePipe.jeevesConnectUtils.addshot(self.job, shot)
 
     def openmyscript(self):
         self.script = self.scriptscombo.currentText()
@@ -250,6 +285,7 @@ class NukeConnectGui(QWidget):
             jeeves_core.setVars.setShot(self.shot)
  
             nukePipe.jeevesConnectUtils.enablemenus()
+            nuke.scriptClear()
             #prompt to save now if there is contents in the current script
         
         else:
@@ -281,15 +317,17 @@ class NukeConnectGui(QWidget):
         self.user = jeeves_core.user
         self.shot = self.shotcombo.currentText()
         
-        self.update_pix()
-        
         self.scriptlist = jeeves_core.searchJob.searchMyNukeScripts(self.job, self.shot, self.user)
         
         list(map(self.scriptscombo.addItem, self.scriptlist))
         
         self.allscriptlist = jeeves_core.searchJob.searchAllNukeScripts(self.job, self.shot)
+        
         if self.allscriptlist:
             list(map(self.allscriptscombo.addItem, self.allscriptlist))
+        
+        self.update_thumb()
+        self.update_note()
  
     def findjob(self):
         print 'FINDING JOB'
@@ -322,32 +360,11 @@ class NukeConnectGui(QWidget):
         self.allscriptlist = jeeves_core.searchJob.searchAllNukeScripts(self.job, self.shot)
         list(map(self.allscriptscombo.addItem, self.allscriptlist))
         
-        self.update_pix()
-
-    def update_pix(self):
-        shot_pix = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', 'tmp', '%s.jpg' % self.shot)
-        if os.path.isfile(shot_pix):
-            self.lbl.setPixmap(QPixmap(shot_pix).scaled(self.lbl.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
-        else:
-            self.lbl.setPixmap(QPixmap(self.default_pix).scaled(self.lbl.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
-        
-        
-        self.notesfile = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', 'tmp', '%s.txt' % self.shot)
-        
-        if os.path.isfile(self.notesfile):
-            f = open(self.notesfile, 'r')
-            file_content = f.readlines()
-            f.close()
-            n = file_content[0]
-            self.notes.clear()
-            self.notes.insertPlainText(n)
-            
-        else:
-            self.notes.clear()
-            
+        #set the thumb and note
+        self.update_thumb()
+        self.update_note()
 
     def checkInstances(self):
-        return
         nuke.tprint ('new instance:', self)
         for widget in QApplication.allWidgets():
             name = widget.objectName()

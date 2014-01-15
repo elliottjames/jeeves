@@ -41,7 +41,7 @@ class WebBrowserWidget(QWidget):
     self.layout().addWidget( self.webView )
 
     url = 'http://www.thefoundry.co.uk/'
-    url = 'http://umlic/licenses/index.py'
+    url = 'http://umlic/licences/index.py'
     self.webView.load( QUrl( url ) )
     self.locationEdit.setText( url ) 
     self.setSizePolicy( QSizePolicy( QSizePolicy.Expanding,  QSizePolicy.Expanding))
