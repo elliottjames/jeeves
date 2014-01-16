@@ -331,7 +331,7 @@ class NukeConnectGui(QWidget):
         self.update_note()
         self.update_font()
     
-    def update_font(self)
+    def update_font(self):
         if self.shot == os.getenv('SHOT'):
             self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4)}")
         else:
