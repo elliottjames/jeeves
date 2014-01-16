@@ -116,7 +116,7 @@ class NukeConnectGui(QWidget):
         ################################################################################
         # MY SCRIPTS
         
-        self.scriptscombo = QComboBox(self)
+        self.scriptscombo = QFontComboBox(self)
         self.scriptscombo.setMinimumSize(QSize(245, 0))
         self.scriptscombo.setMaximumSize(QSize(245, 16777215))
 
@@ -172,6 +172,7 @@ class NukeConnectGui(QWidget):
         self.vbox.addLayout(self.hbox5_allscripts)
         self.vbox.addStretch(1)
         self.setLayout(self.vbox)
+        
     
     #################################################################################
     # GUI FUNCTIONS
@@ -328,6 +329,12 @@ class NukeConnectGui(QWidget):
         
         self.update_thumb()
         self.update_note()
+        if self.shot == os.getenv('SHOT'):
+            self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4)}")
+        else:
+            self.shotcombotext.setStyleSheet("QLabel { color: rgb(255, 255, 255)}")
+
+
  
     def findjob(self):
         print 'FINDING JOB'
@@ -359,7 +366,9 @@ class NukeConnectGui(QWidget):
         #all scripts
         self.allscriptlist = jeeves_core.searchJob.searchAllNukeScripts(self.job, self.shot)
         list(map(self.allscriptscombo.addItem, self.allscriptlist))
-        
+ 
+        #self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4); font-size: 11px }")
+
         #set the thumb and note
         self.update_thumb()
         self.update_note()
