@@ -329,13 +329,14 @@ class NukeConnectGui(QWidget):
         
         self.update_thumb()
         self.update_note()
+        self.update_font()
+    
+    def update_font(self)
         if self.shot == os.getenv('SHOT'):
             self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4)}")
         else:
             self.shotcombotext.setStyleSheet("QLabel { color: rgb(255, 255, 255)}")
 
-
- 
     def findjob(self):
         print 'FINDING JOB'
         
@@ -372,6 +373,7 @@ class NukeConnectGui(QWidget):
         #set the thumb and note
         self.update_thumb()
         self.update_note()
+        self.update_font()
 
     def checkInstances(self):
         nuke.tprint ('new instance:', self)
