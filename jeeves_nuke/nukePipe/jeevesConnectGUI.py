@@ -303,6 +303,7 @@ class NukeConnectGui(QWidget):
 
             nuke.scriptClear()
             nuke.scriptOpen(self.fullpath)
+        self.update_font()
 
     def changeShot(self, shot):
         print 'CHANGING SHOT'
@@ -333,7 +334,7 @@ class NukeConnectGui(QWidget):
     
     def update_font(self):
         if self.shot == os.getenv('SHOT'):
-            self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4)}")
+            self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4); font-size: 14px}")
         else:
             self.shotcombotext.setStyleSheet("QLabel { color: rgb(255, 255, 255)}")
 
