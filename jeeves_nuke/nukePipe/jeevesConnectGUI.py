@@ -1,4 +1,4 @@
-import nuke, os
+import nuke, os, datetime
 from PySide.QtGui import *
 from PySide.QtCore import *
 from nukescripts import panels
@@ -75,6 +75,7 @@ class NukeConnectGui(QWidget):
 
         spacer2 = QSpacerItem(90, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
         spacer1 = QSpacerItem(0, 20, QSizePolicy.Expanding, QSizePolicy.Expanding)
+        spacer3 = QSpacerItem(400, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
         
         self.hbox3_thumb = QHBoxLayout()
         self.lbl = QLabel(self)
@@ -98,15 +99,16 @@ class NukeConnectGui(QWidget):
         self.hbox6_notes = QHBoxLayout()
         text = ''
         #self.notes = QPlainTextEdit(text)
-        self.notes = QTextEdit(text)
+        self.notes = QTextBrowser()
+        self.notes.setPlainText(text)
         self.notes.setMinimumSize(QSize(240, 135))
         self.notes.setMaximumSize(QSize(240, 135))
         
         
-        self.notesnap = QPushButton('&Save')
+        self.notesnap = QPushButton('&Add')
         self.notesnap.setMinimumSize(QSize(75, 0))
         self.notesnap.setMaximumSize(QSize(75, 45))
-        self.notesnap.clicked.connect(self.note_snap)
+        self.notesnap.clicked.connect(self.note_add)
         
         self.hbox6_notes.addItem(spacer1)
         self.hbox6_notes.addWidget(self.notes)
@@ -116,7 +118,7 @@ class NukeConnectGui(QWidget):
         ################################################################################
         # MY SCRIPTS
         
-        self.scriptscombo = QFontComboBox(self)
+        self.scriptscombo = QComboBox(self)
         self.scriptscombo.setMinimumSize(QSize(245, 0))
         self.scriptscombo.setMaximumSize(QSize(245, 16777215))
 
@@ -180,6 +182,36 @@ class NukeConnectGui(QWidget):
     #################################################################################
     # upadte thumbnail and notes
     
+    def note_add(self):
+        text, ok = QInputDialog.getText(self, 'Add Note', '')
+        
+        if ok:
+            note  = '----- %s %s -----' % (jeeves_core.user, datetime.date.today() ) + '\n\n' + str(text) + '\n\n'
+            print note
+            
+        self.shot_note = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.txt' % self.shot)
+        
+        if not os.path.isfile(self.shot_note):
+            x = open(self.shot_note, 'w')
+            x.close()
+        
+        currenttxt = open(self.shot_note, 'r')
+        file_content = currenttxt.readlines()
+        currenttxt.close()
+        
+        file_content.insert(0, note)
+        text = ''.join(file_content)
+        
+        f = open(self.shot_note, 'w')
+        f.write(text)
+        f.close()
+        self.update_note()
+        
+        
+        
+        
+        
+    
     def check_for_tmp(self):
         tmpdir = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp')
         if not os.path.isdir(tmpdir):
@@ -214,10 +246,46 @@ class NukeConnectGui(QWidget):
         self.shot_note = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.txt' % self.shot)
         
         if not os.path.isfile(self.shot_note):
-            open(self.shot_note, 'w')
-
+            x = open(self.shot_note, 'w')
+            #x.close()
+        
+        f = open(self.shot_note, 'r+')
+        txt1 = ''.join(f.readlines()).split('\n')
+        f.close()
+        print txt1
+        
+        txt2 = self.notes.toPlainText().split('\n')
+        print txt2
+        
+        length = len(txt1)
+        print length
+        l3 = txt2[length -1:]
+        print l3
+        string = ''.join(l3)
+        note  = '\n\n' + '*** %s %s ***' % (jeeves_core.user, datetime.date.today() ) + '\n\n' + string
+        print note
+        
+        x = open(self.shot_note, 'a')
+        x.write(note)
+        x.close()
+        
+        self.update_note()
+    
+    def note_snap_old(self):
+        self.check_for_tmp()
+        self.shot_note = os.path.join(jeeves_core.jobsRoot, self.job, 'vfx', 'nuke', self.shot, 'plates', '.tmp', '%s.txt' % self.shot)
+        
+        print self.notes.toPlainText()
+        print type(self.notes.toPlainText())
+        
+        if not os.path.isfile(self.shot_note):
+            x = open(self.shot_note, 'w')
+            x.close()
+        
+        note  = '*** %s %s ***' % (jeeves_core.user, datetime.date.today() ) + '\n\n' + self.notes.toPlainText()
+        
         f = open(self.shot_note, 'w')
-        f.write(self.notes.toPlainText())
+        f.write(note)
         f.close()
         
         self.update_note()
@@ -320,8 +388,8 @@ class NukeConnectGui(QWidget):
         self.shot = self.shotcombo.currentText()
         
         self.scriptlist = jeeves_core.searchJob.searchMyNukeScripts(self.job, self.shot, self.user)
-        
-        list(map(self.scriptscombo.addItem, self.scriptlist))
+        if self.scriptlist:
+            list(map(self.scriptscombo.addItem, self.scriptlist))
         
         self.allscriptlist = jeeves_core.searchJob.searchAllNukeScripts(self.job, self.shot)
         
@@ -367,7 +435,8 @@ class NukeConnectGui(QWidget):
         
         #all scripts
         self.allscriptlist = jeeves_core.searchJob.searchAllNukeScripts(self.job, self.shot)
-        list(map(self.allscriptscombo.addItem, self.allscriptlist))
+        if self.scriptlist:
+            list(map(self.allscriptscombo.addItem, self.allscriptlist))
  
         #self.shotcombotext.setStyleSheet("QLabel { color: rgb(198, 4, 4); font-size: 11px }")
 
