@@ -74,4 +74,11 @@ def searchNukeFullpath(job, shot, user, script):
     #returns string
     fullpath = os.path.join(jeeves_core.jobsRoot, job, 'vfx', 'nuke', shot, 'scripts', user, script )
     return fullpath
+
+def searchForShot(job, shot):
+    shotpath = os.path.join(jeeves_core.jobsRoot, job, 'vfx', 'nuke', shot)
+    if os.path.isdir(shotpath):
+        return False
+    else:
+        return True
         

@@ -1,4 +1,5 @@
 import nuke, os, sys, re, nukescripts
+import jeeves_gui
 
 nuke.tprint('STARTING NUKE MENU.PY''\n')
 
@@ -28,7 +29,7 @@ for filepath in nuke.pluginPath():
 nukeMenu = nuke.menu('Nuke')
 jeevesMenu = nukeMenu.addMenu('JEEVES')
 
-jeevesMenu.addCommand('Connect to Jeeves', 'reload(nukePipe.jeevesConnectGUI);nukePipe.jeevesConnectGUI.run()', icon='unit.png' )
+jeevesMenu.addCommand('Connect to Jeeves', 'reload(jeeves_gui.jeevesNukeGui);jeeves_gui.jeevesNukeGui.run()', icon='unit.png' )
 jeevesMenu.addSeparator()
 jeevesMenu.addCommand("Submit to Farm", 'reload(nukeUtils.submitDeadline);nukeUtils.submitDeadline.main()', "", icon='deadline.png') 
 jeevesMenu.addSeparator()
